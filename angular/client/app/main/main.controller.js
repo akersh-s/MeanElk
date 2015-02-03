@@ -1,9 +1,15 @@
 'use strict';
 
 angular.module('angularApp').controller('MainCtrl', function ($scope) {
-	var dataPoints = [
-                [44.651144316,-89.586260171, 50.5],
-                [44.75, -63.5, 4.8] ];
+    $scope.dataPoints = [
+                [44.651144316,-89.586260171, 125.5],
+                [44.75, -63.5, 125.8] ];
+    var i = 0;
+    $scope.addSpot = function() {
+        $scope.dataPoints.push([i, -1 * i, 125.5]);
+        i++;
+    };
+	
 	$scope.center = {
         lat: 39.8282,
         lng: -98.57,
@@ -22,7 +28,7 @@ angular.module('angularApp').controller('MainCtrl', function ($scope) {
                         heatmap: {
                             name: 'Heat Map',
                             type: 'heatmap',
-                            data: dataPoints,
+                            data: $scope.dataPoints,
                             visible: true
                         }
                     }

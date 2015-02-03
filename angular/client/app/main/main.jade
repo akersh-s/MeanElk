@@ -1,3 +1,4 @@
 div(ng-include='"components/navbar/navbar.html"')
 .container
-  leaflet(defaults="defaults", center="center", height="480px", width='100%')
+  leaflet(defaults="defaults", center="center", layers="layers", height="480px", width='100%')
+  button(class="btn btn-lrg", ng-click="addSpot()") Add Spot
