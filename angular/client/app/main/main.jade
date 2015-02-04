@@ -1,4 +1,17 @@
 div(ng-include='"components/navbar/navbar.html"')
 .container
   leaflet(defaults="defaults", center="center", layers="layers", height="480px", width='100%')
-  button(class="btn btn-lrg", ng-click="addSpot()") Add Spot
+  hr
+  #map-options
+    .row
+      form.form-horizontal(ng-submit="searchTwitter()")
+        .input-group
+          input#search-terms.form-control(type='text', ng-model='text', autofocus, placeholder='Twitter Search Terms')
+          span.input-group-btn
+            input#search-btn.btn.btn-default(type='submit', value='Search Twitter')
+      small Please use a | to separate search criteria.
+    .row
+      button.btn.btn-default(ng-click='stopStreaming()') Stop
+      button.btn.btn-default(ng-click='clear()') Clear Results
+    .row
+      {{err}}
