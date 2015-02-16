@@ -41,7 +41,6 @@ module.exports = function (socketio) {
     });
 
     socket.on('searchTweetCount', function(keywords) {
-      console.log(keywords);
       socket.continueStreaming = true;
       searchTweet.countWords(keywords, socket);
     });

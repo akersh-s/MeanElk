@@ -1,14 +1,7 @@
 'use strict';
 
 angular.module('angularApp').controller('MainCtrl', function ($scope, socket) {
-    $scope.dataPoints = [
-                [44.651144316,-89.586260171, 125.5],
-                [44.75, -63.5, 125.8] ];
-    var i = 0;
-    $scope.addSpot = function() {
-        $scope.dataPoints.push([i, -1 * i, 125.5]);
-        i++;
-    };
+    $scope.dataPoints = [];
 	
 	$scope.center = {
         lat: 39.8282,
@@ -57,7 +50,9 @@ angular.module('angularApp').controller('MainCtrl', function ($scope, socket) {
     $scope.clear = function() {
         $scope.dataPoints = [];
     };
-    socket.on('searchTweetCountResult', function(words) {
-        console.log(words);
+    socket.on('tweetInfo', function(tweetInfo) {
+        console.log(tweetInfo);
+        tweetInfo.push(25);
+        $scope.dataPoints.push(tweetInfo);
     });
 });
