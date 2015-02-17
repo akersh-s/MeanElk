@@ -9,6 +9,10 @@ var searchTweet = require('./socket/search-tweet');
 
 // When the user disconnects.. perform this
 function onDisconnect(socket) {
+  socket.connected = false;
+  if (socket.destroyStream) {
+    socket.destroyStream();
+  }
 }
 
 // When the user connects.. perform this
@@ -18,7 +22,6 @@ function onConnect(socket) {
     console.info('[%s] %s', socket.address, JSON.stringify(data, null, 2));
   });
   socket.connected = true;
-  socket.continueStreaming = false;
 }
 
 module.exports = function (socketio) {
@@ -41,12 +44,13 @@ module.exports = function (socketio) {
     });
 
     socket.on('searchTweetCount', function(keywords) {
-      socket.continueStreaming = true;
       searchTweet.countWords(keywords, socket);
     });
 
     socket.on('stop', function() {
-      socket.continueStreaming = false;
+      if (socket.destroyStream) {
+        socket.destroyStream();
+      }
     });
 
     // Call onConnect.

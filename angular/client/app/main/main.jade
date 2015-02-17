@@ -4,14 +4,15 @@ div(ng-include='"components/navbar/navbar.html"')
   hr
   #map-options
     .row
-      form.form-horizontal(ng-submit="searchTwitter()")
+      form.form-horizontal(ng-submit="searchTwitter()" ng-disabled="!text.trim()")
         .input-group
           input#search-terms.form-control(type='text', ng-model='text', autofocus, placeholder='Twitter Search Terms')
           span.input-group-btn
-            input#search-btn.btn.btn-default(type='submit', value='Search Twitter')
+            input#search-btn.btn.btn-default(type='submit', value='{{searchText}}' ng-disabled="!text.trim()")
       small Please use a | to separate search criteria.
+    br
+    
     .row
-      button.btn.btn-default(ng-click='stopStreaming()') Stop
       button.btn.btn-default(ng-click='clear()') Clear Results
     .row
       {{err}}
