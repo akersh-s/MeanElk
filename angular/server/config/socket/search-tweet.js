@@ -26,7 +26,3 @@ searchTweet.countWords = function(keywords, socket) {
 		console.log('oiy');
 	});
 };
-var socket = {};
-socket.continueStreaming = true;
-socket.connected = true;
-searchTweet.countWords(['tonight'], socket);
