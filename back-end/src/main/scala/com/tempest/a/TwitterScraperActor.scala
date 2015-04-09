@@ -3,11 +3,7 @@ package com.tempest.a
 import akka.actor.ActorSystem
 import akka.actor.{Actor, ActorLogging, Props}
 import scala.concurrent.Future
-import twitter4j.Status
-import twitter4j.StatusDeletionNotice
-import twitter4j.StatusListener
-import twitter4j.StallWarning
-import twitter4j.TwitterStreamFactory
+import twitter4j._
 
 object TwitterScraperActor {
   val props = Props[TwitterScraperActor]
@@ -23,18 +19,18 @@ class TwitterScraperActor extends Actor with ActorLogging {
   def start() {
     log.info("Starting up the Twitter Scraper.")
     
+    val fq = new FilterQuery()
+    fq.language(Array("en"))
     val twitterStream = new TwitterStreamFactory(Config.twitterConfig).getInstance
     twitterStream.addListener(TempestStatusListener)
+    twitterStream.filter(fq)
     twitterStream.sample
   }
 }
 
-object TempestStatusListener extends StatusListener {
-  val system = ActorSystem("MyActorSystem")
-  var sentimentActor = system.actorOf(SentimentActor.props, "sentimentActor")
-  
+object TempestStatusListener extends StatusListener {  
   def onStatus(status: Status) {
-    sentimentActor ! new SentimentActor.TwitterMessage(status.getText)
+    ApplicationMain.sentimentActor ! new SentimentActor.TwitterMessage(status.getText)
   }
   def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice) {}
   def onTrackLimitationNotice(numberOfLimitedStatuses: Int) {}
