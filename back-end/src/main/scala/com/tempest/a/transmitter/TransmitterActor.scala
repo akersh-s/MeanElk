@@ -22,7 +22,7 @@ class TransmitterActor extends Actor with ActorLogging {
 			}
 		case TransmitterActor.Send(message) =>
 			if (message != null) {
-				log.info(message) 
+				//log.info(message) 
 				for (client <- clients) {
 					client.send(message)
 				}

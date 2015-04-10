@@ -18,3 +18,7 @@ trait RouteActor extends HttpServiceActor {
   def connection : ActorRef
   def route : Route
 }
+
+private[api] class BasicRouteActor(val connection : ActorRef, val route : Route) extends RouteActor {
+  override def receive = runRoute(route)
+}

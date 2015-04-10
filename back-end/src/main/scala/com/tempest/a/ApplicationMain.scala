@@ -12,12 +12,13 @@ object ApplicationMain extends App with MainActors with ReactiveApi {
   
   //Setup WebSockets
   sys.addShutdownHook({ system.shutdown })
-  IO(UHttp) ! Http.Bind(wsService, Config.host, Config.portWs)
+  
   // Since the UTttp extension extends from Http extension, it starts an actor whose name will later collide with the Http extension.
   system.actorSelection("/user/IO-HTTP") ! PoisonPill
   //IO(Tcp) ! Tcp.Bind(socketService, new InetSocketAddress(Configuration.host, Configuration.portTcp))
   // We could use IO(UHttp) here instead of killing the "/user/IO-HTTP" actor
-  //IO(Http) ! Http.Bind(rootService, Config.host, Config.portHttp)
+  IO(UHttp) ! Http.Bind(wsService, Config.host, Config.portWs)
+  //IO(Http) ! Http.Bind(wsService, Config.host, Config.portWs)
 
   twitterScraperActor ! TwitterScraperActor.Start
   // This example app will ping pong 3 times and thereafter terminate the ActorSystem - 
