@@ -1,0 +1,13 @@
+div(ng-include='"components/navbar/navbar.html"')
+
+.container
+  .row
+    .col-xs-12
+      #chart(google-chart, chart="chart", on-ready="chartReady()")
+  .row
+    .col-xs-12
+      h1 Most Recent Messages
+  .box-color
+    .row(ng-repeat="recentMessage in recentMessages")
+      .col-lg-12
+        p {{recentMessage.message}} - {{recentMessage.mood}}
