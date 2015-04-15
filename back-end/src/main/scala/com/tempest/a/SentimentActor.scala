@@ -34,13 +34,25 @@ class SentimentActor extends Actor with ActorLogging {
   	val sentences = annotation.get(classOf[CoreAnnotations.SentencesAnnotation])
   	sentences.toList.foreach { sentence =>
   		val sentiment = sentence.get(classOf[SentimentCoreAnnotations.ClassName]).toString
-      val json = SentimentMessage(sentence.toString, sentiment).toJson
-
+      val sentimentScore = determineSentiment(sentiment.toString)
+      val json = SentimentMessage(sentence.toString, sentimentScore).toJson
       ApplicationMain.transmitterActor ! TransmitterActor.Send(json.toString)
   	}
   }
+
+  def determineSentiment(sentimentResponse: String): Integer ={
+    if (sentimentResponse == "Positive") {
+      return 100
+    }
+    else if (sentimentResponse == "Negative") {
+      return 0
+    }
+    else {
+      return 50
+    }
+  }
 }
 
-case class SentimentMessage(sentence: String, sentiment: String) {
-  def toJson:JsValue = JsArray(JsString(sentence), JsString(sentiment))
+case class SentimentMessage(sentence: String, sentiment: Integer) {
+  def toJson:JsValue = JsArray(JsString(sentence), JsNumber(sentiment))
 }

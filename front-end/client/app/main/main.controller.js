@@ -16,44 +16,48 @@ angular.module('frontEndApp').controller('MainCtrl', function ($scope, $websocke
         	{id: "month", label: "Month", type: "string"},
         	{id: "Sentiment-id", label: "Sentiment", type: "number"}
     	],
-    	rows: [
-        	{c: [
-            	{v: ""},
-            	{v: 19, f: "42 items"}
-        	]},
-        	{c: [
-            	{v: ""},
-            	{v: 13}
-        ]},
-        {c: [
-            {v: ""},
-            {v: 24}
-
-        ]}
-    ]};
+    	rows: []
+    };
  	var rows = c.data.rows;   
 	tweetStream.onMessage(function(message) {
 		var array = JSON.parse(message.data);
 		var recentMessage = new RecentMessage(array);
 		addToRecent(recentMessage);
 	});
-
+    var averageSentiment = 50;
+    var sentiments = 1;
 	var addToRecent = function(recentMessage) {
 		$scope.recentMessages.push(recentMessage);
 		if ($scope.recentMessages.length > maxRecentSize) {
 			$scope.recentMessages.shift();
 		}
-		c.data.rows.push({
-			c: [
-				{v: ''},
-				{v: Math.random() * 100}
-			]
-		});
-		if (c.data.rows.length > 20) {
-			c.data.rows.shift();
-		}
+        averageSentiment = $scope.averageSentiment = ((averageSentiment * sentiments) + recentMessage.sentiment) / (sentiments + 1);
+        if (sentiments < 100) {
+            sentiments++;
+            $scope.sentiments = sentiments;            
+        }
 	};
 
+    var chartIndex = 0
+    var addToChart = function() {
+        var description = '';
+        if (chartIndex % 1 === 0) {
+            description = new Date();
+            console.log(description);
+        }
+        c.data.rows.push({
+            c: [
+                {v: description},
+                {v: averageSentiment}
+            ]
+        });
+        chartIndex++;
+        if (c.data.rows.length > 50) {
+            c.data.rows.shift();
+        }
+        $timeout(addToChart, 100);
+    }
+    addToChart();
     c.options = {
         "title": "Sales per month",
         "isStacked": "true",
@@ -67,10 +71,10 @@ angular.module('frontEndApp').controller('MainCtrl', function ($scope, $websocke
         }
     };
     $scope.chartReady = function () {
-        fixGoogleChartsBarsBootstrap();
+        //fixGoogleChartsBarsBootstrap();
     }
 	
-	var addMock = function() {
+	/*var addMock = function() {
 		var num = Math.random();
 		var mood = 'Negative';
 		if (num > 0.33 && num < 0.66) {
@@ -83,7 +87,7 @@ angular.module('frontEndApp').controller('MainCtrl', function ($scope, $websocke
 		num++;
 		$timeout(addMock, 25);
 	};
-	addMock();
+	addMock();*/
 
     function fixGoogleChartsBarsBootstrap() {
         // Google charts uses <img height="12px">, which is incompatible with Twitter
