@@ -19,11 +19,11 @@ class TwitterScraperActor extends Actor with ActorLogging {
   def start() {
     log.info("Starting up the Twitter Scraper.")
     
-    val fq = new FilterQuery()
-    fq.language(Array("en"))
+    //val fq = new FilterQuery()
+    //fq.language(Array("en"))
     val twitterStream = new TwitterStreamFactory(Config.twitterConfig).getInstance
     twitterStream.addListener(TempestStatusListener)
-    twitterStream.filter(fq)
+    //twitterStream.filter(fq)
     twitterStream.sample
   }
 }

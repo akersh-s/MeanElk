@@ -9,4 +9,5 @@ trait MainActors {
 	lazy val twitterScraperActor = system.actorOf(TwitterScraperActor.props, "twitterScraperActor")
 	lazy val transmitterActor = system.actorOf(TransmitterActor.props, "transmitterActor")
 	lazy val sentimentActor = system.actorOf(SentimentActor.props, "sentimentActor")
+	lazy val stockPriceActor = system.actorOf(StockPriceActor.props, "stockPriceActor")
 }

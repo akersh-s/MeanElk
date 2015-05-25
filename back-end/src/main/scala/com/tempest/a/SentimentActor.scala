@@ -20,6 +20,11 @@ object SentimentActor {
   annotators.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse, sentiment")
   val pipeline = new StanfordCoreNLP(annotators)
   case class TwitterMessage(message: String) 
+  
+  def toAscii(hex: String) = {
+    import javax.xml.bind.DatatypeConverter
+    new String(DatatypeConverter.parseHexBinary(hex))
+  }
 }
 
 class SentimentActor extends Actor with ActorLogging {
@@ -36,7 +41,7 @@ class SentimentActor extends Actor with ActorLogging {
   		val sentiment = sentence.get(classOf[SentimentCoreAnnotations.ClassName]).toString
       val sentimentScore = determineSentiment(sentiment.toString)
       val json = SentimentMessage(sentence.toString, sentimentScore).toJson
-      ApplicationMain.transmitterActor ! TransmitterActor.Send(json.toString)
+      ApplicationMain.transmitterActor ! TransmitterActor.Send("sentiment", json)
   	}
   }
 

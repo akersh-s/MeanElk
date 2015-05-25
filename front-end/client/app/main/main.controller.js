@@ -20,9 +20,14 @@ angular.module('frontEndApp').controller('MainCtrl', function ($scope, $websocke
     };
  	var rows = c.data.rows;   
 	tweetStream.onMessage(function(message) {
-		var array = JSON.parse(message.data);
-		var recentMessage = new RecentMessage(array);
-		addToRecent(recentMessage);
+		var data = JSON.parse(message.data);
+        if (data.type === 'stockprice') {
+            $scope.stockPrices = data.value;
+        }
+        else if (data.type === 'sentiment') {
+            var recentMessage = new RecentMessage(data.value);
+            addToRecent(recentMessage);
+        }
 	});
     var averageSentiment = 50;
     var sentiments = 1;
@@ -43,7 +48,6 @@ angular.module('frontEndApp').controller('MainCtrl', function ($scope, $websocke
         var description = '';
         if (chartIndex % 1 === 0) {
             description = new Date();
-            console.log(description);
         }
         c.data.rows.push({
             c: [

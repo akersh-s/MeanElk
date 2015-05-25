@@ -4,12 +4,13 @@ import akka.actor.{ ActorSystem, PoisonPill }
 import akka.io.{ IO, Tcp }
 import spray.can.Http
 import spray.can.server.UHttp
-import com.tempest.a
+import com.tempest.a._
 import com.tempest.a.api._
+import scala.concurrent.duration._
 
 object ApplicationMain extends App with MainActors with ReactiveApi {
   implicit lazy val system = ActorSystem("tempest-system")
-  
+  import system.dispatcher
   //Setup WebSockets
   sys.addShutdownHook({ system.shutdown })
   
@@ -21,6 +22,8 @@ object ApplicationMain extends App with MainActors with ReactiveApi {
   //IO(Http) ! Http.Bind(wsService, Config.host, Config.portWs)
 
   twitterScraperActor ! TwitterScraperActor.Start
+  system.scheduler.schedule(0 seconds, 10 seconds, stockPriceActor, StockPriceActor.UpdateStocks)
+
   // This example app will ping pong 3 times and thereafter terminate the ActorSystem - 
   // see counter logic in PingActor
   system.awaitTermination()
