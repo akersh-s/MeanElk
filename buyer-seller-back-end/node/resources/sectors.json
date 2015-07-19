@@ -1,0 +1,10 @@
+[
+	{
+		"name": "Energy",
+		"symbols": ["YZC", "LGCY", "CLNE", "FTK", "JASO", "XOM"]	
+	},
+	{
+		"name": "Indexes",
+		"symbols": ["VFINX", "GSPC", "VTSMX", "VGSIX", "VGTSX"]
+	}
+]

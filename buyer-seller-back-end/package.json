@@ -1,0 +1,17 @@
+{
+  "name": "buyer-seller-back-end",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sentiment-analysis.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^2.2.7",
+    "lodash": "^3.10.0",
+    "sentiment": "^1.0.2",
+    "twitter": "^1.2.5"
+  }
+}

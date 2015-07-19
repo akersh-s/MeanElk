@@ -1,0 +1,23 @@
+//{"$id":"sentimentData","$priority":null,"averageSentimentScore":0.06179837097644724,"money":2000,"stocksOwned":0,"time":1436677576210,"totalSentimentNum":147,"iterationStart":1436677566104}
+.container-fluid
+	.row: .col-xs-12
+			#chart(google-chart, chart="main.chart", on-ready="chartReady()")
+	.row: .col-xs-12
+		h1 Current Algorithm Status
+		p Average Sentiment Score: {{main.sentimentData.averageSentimentScore * 1000 | number:3}}
+		p Current Money: {{main.sentimentData.money | currency}}
+		p Stocks Owned: {{main.sentimentData.stocksOwned}}
+		p Iteration Start Time: {{main.sentimentData.iterationStart | date:'hh:mm a s \'seconds\''}}
+		p Number of Tweets Analyzed this Iteration: {{main.sentimentData.totalSentimentNum}}
+	.row: .col-xs-12
+		h1 Current Quotes
+	.row: .col-sm-4(ng-repeat='quote in main.quotes')
+		h3 {{quote.exchange}} - {{quote.ticker}}
+		p {{quote.price | currency}}
+	.row: .col-xs-12
+			h1.white-text Most Recent Messages
+	.box-color: .row(ng-repeat="recentMessage in main.recentMessages")
+		.col-lg-12
+			p: strong {{recentMessage.sentiment * 1000 | number:3}}
+			p {{recentMessage.tweet}}
+			hr
