@@ -1,6 +1,6 @@
 var stockPriceChecker = module.exports = {};
 var http = require('http');
-var sectors = require('./resources/sectors.json');
+var companies = require('./resources/companies.json');
 var _ = require('lodash');
 
 //Private Functions
@@ -31,7 +31,7 @@ var createMeaningfulQuotePropertyNames = function(data) {
 
 //Public Functions
 stockPriceChecker.downloadAllSectorPrices = function(cb) {
-	var allTickerSymbols = _.pluck(sectors, 'symbols');
+	var allTickerSymbols = _.pluck(companies, 'ticker');
 	stockPriceChecker.downloadPrices(allTickerSymbols, cb);
 };
 
@@ -68,6 +68,14 @@ stockPriceChecker.downloadPrices = function(tickerSymbols, cb) {
 	});
 };
 
-stockPriceChecker.downloadAllSectorPrices(function(data) {
-	console.log(data);
-})
+stockPriceChecker.findQuoteForCompany = function(companyTicker, quotes) {
+    var quote = null;
+    if (quotes) {
+    	quotes.forEach(function(q) {
+        	if (q.ticker === companyTicker) {
+        		quote = q;
+        	}
+    	});	
+    }
+    return quote;
+};

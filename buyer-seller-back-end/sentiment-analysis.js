@@ -1,104 +1,97 @@
 var Twitter = require('twitter');
-var Firebase = require('firebase');
 var twitter = new Twitter(require('./node/resources/twitter-config.json'));
-var sentiment = require('sentiment');
 var stockPriceChecker = require('./node/stock-price-checker');
 var mathematician = require('./node/mathematician');
 var stockBroker = require('./node/stock-broker');
+var firebaseBuyerSeller = require('./node/firebase-buyer-seller');
+var statusAnalyzer = require('./node/status-analyzer');
+var companies = require('./node/resources/companies.json');
 
 //Configurable Values
-var iterationLengthSeconds = 25; //Decide to buy/sell every this amount of seconds, prepare variables, and reset.
+var iterationLengthSeconds = 10; //Decide to buy/sell every this amount of seconds, prepare variables, and reset.
 var previousIterationsToTrackAverage = 3; //Number of previous iterations to track the average for in standard deviation
 var numStdDeviations = 1; //Number of standard deviations above or below to buy/sell.
+var minimumRequiredAnalyzedTweets = 100 //Minimum number of analyzed tweets to decide buy/sell. Otherwise, tweets will carry over to next iteration.
+var numCompanyVariations = 2; //Number of variations to create for each company to perform a variation for machine learning on.
 
-var firebaseRoot = new Firebase('https://buyer-seller.firebaseio.com/');
-var firebaseQuotes = firebaseRoot.child('quotes');
-var firebaseRecentTweetSentiments = firebaseRoot.child('recentTweetSentiments');
-var firebaseSentimentData = firebaseRoot.child('sentimentData');
-var d = {
-    iterationStart: +new Date(),
-    averageSentimentScore: 0,
-    totalSentimentNum: 0,
+//Sentiment data for each company shall be stored as a property in the object below
+//i.e. d['GOOG'] = { iteractionStart, averageSentimentScore, totalSentimentNum};
+var d = {};
+var metadata = {
+    money: 2000.00,
+    stocksOwned: {}
 };
-var recentTweetSentiments = [];
+companies.forEach(function(company) {
+    d[company.ticker] = { //aka companyData
+        averageSentimentScore: 0,
+        totalSentimentNum: 0,
+        previousIterations: [],
+        quote: 0
+    };
+    metadata.stocksOwned[company.ticker] = 0;
 
-//State information
-d.money = 2000.00;
-d.stocksOwned = 0;
-
-//Global Variables
-var previousIterationQuotes = d.previousIterationQuotes = [];
-var previousIterationSentiments = d.previousIterationSentiments = [];
-
-var saveData = function() {
-    d.time = +new Date();
-    firebaseSentimentData.set(d);
-}
-var prepareNextIteration = function(quotes) {
-    if (quotes) {
-        previousIterationQuotes.push(quotes);
-        previousIterationSentiments.push(d.averageSentimentScore);
-        if (previousIterationQuotes.length > previousIterationsToTrackAverage) {
-            previousIterationQuotes.shift();
-            previousIterationSentiments.shift();
-        }
-        d.averageSentimentScore = 0;
-        d.totalSentimentNum = 0;
-        d.iterationStart = +new Date();
-        saveData();
-    }
-};
-
-var updateRecentTweetSentiments = function(tweet, sentiment) {
-    recentTweetSentiments.unshift({tweet: tweet, sentiment:sentiment});
-    if (recentTweetSentiments.length > 100) {
-        recentTweetSentiments.pop();
-    }
-    firebaseRecentTweetSentiments.set(recentTweetSentiments);
-};
-
-twitter.stream('statuses/sample', {language: 'en'}, function(stream) {
-    stream.on('data', function(data) {
-        if(data && data.text) {
-
-            var sentimentScore = sentiment(data.text).comparative;
-            d.averageSentimentScore = ((d.averageSentimentScore * d.totalSentimentNum) + sentimentScore) / (d.totalSentimentNum + 1);
-            d.totalSentimentNum++;
-            updateRecentTweetSentiments(data.text, sentimentScore);
-            saveData();
-            //console.log('Total: ' + totalSentimentNum);
-            //console.log('Average: ' + averageSentimentScore);
-            //console.log(sentimentScore + ' - ' + data.text + '\n\n');
-        }
-    });
 });
 
-setInterval(function() {
+var prepareNextIteration = function(companyData) {
+        var previousIterations = companyData.previousIterations;
+        previousIterations.push({
+            quote: companyData.quote,
+            sentiment: companyData.averageSentimentScore
+        });
+        if (previousIterations.length > previousIterationsToTrackAverage) {
+            previousIterations.shift();
+        }
+        companyData.averageSentimentScore = 0;
+        companyData.totalSentimentNum = 0;
+        companyData.iterationStart = +new Date();
+};
+
+
+var completeIteration = function() {
     stockPriceChecker.downloadAllSectorPrices(function(quotes) {
-        firebaseQuotes.set(quotes);
-        if (previousIterationSentiments.length === previousIterationsToTrackAverage) {
-            //Time to check for buy/sell!
-            var avg = mathematician.calculateMeanVarianceAndDeviation(previousIterationSentiments);
-            var buyAmount = avg.mean + (avg.deviation * numStdDeviations);
-            var sellAmount = avg.mean - (avg.deviation * numStdDeviations);
-            console.log(avg);
-            console.log(d.averageSentimentScore);
-            if (d.averageSentimentScore > buyAmount && d.money > 0) {
-                stockBroker.buyStocks(quotes, function(cost, stocksPurchased) {
-                    d.money -= cost;
-                    d.stocksOwned += stocksPurchased;
-                    saveData();
-                });
-            }
-            else if (d.averageSentimentScore < sellAmount && d.stocksOwned > 0) {
-                stockBroker.sellStocks(quotes, function(cost, stocksSold) {
-                    d.money += cost;
-                    d.stocksOwned -= stocksSold;
-                    saveData();
-                });
+        firebaseBuyerSeller.firebaseQuotes.set(quotes);
+        var dChanged = false;
+        for (company in d) {
+            var companyData = d[company];
+            companyData.quote = stockPriceChecker.findQuoteForCompany(company, quotes);
+            console.log(company, companyData);
+            if (companyData.totalSentimentNum >= minimumRequiredAnalyzedTweets && companyData.quote) {
+                if (companyData.previousIterations.length === previousIterationsToTrackAverage) {
+                    var previousSentiments = _.pluck(companyData.previousIterations, 'sentiments');
+                    var avg = mathematician.calculateMeanVarianceAndDeviation(previousSentiments);
+                    var buyAmount = avg.mean + (avg.deviation * numStdDeviations);
+                    var sellAmount = avg.mean - (avg.deviation * numStdDeviations);
+                    if (companyData.averageSentimentScore > buyAmount /* and have enough money*/) {
+                        stockBroker.buyStocks(companyData, metadata, function(cost, stocksPurchased) {
+                            metadata.money -= cost;
+                            metadata.stocksOwned[company] += stocksPurchased;
+                        });
+                    }
+                    else if (companyData.averageSentimentScore < sellAmount && metadata.stocksOwned[company] > 0) {
+                        stockBroker.sellStocks(companyData, metadata);
+                    }
+                }
+                prepareNextIteration(companyData);
+                dChanged = true;
             }
         }
-        prepareNextIteration(quotes);
+        if (dChanged) {
+            firebaseBuyerSeller.saveData(d);
+        }
     });
-}, iterationLengthSeconds * 1000);
+};
 
+var start = function() {
+    twitter.stream('statuses/sample', {language: 'en'}, function(stream) {
+        stream.on('data', function(twitterData) {
+            if(twitterData && twitterData.text) {
+                statusAnalyzer.analyzeStatus(d, twitterData.text);
+            }
+        });
+    });
+    setInterval(completeIteration, iterationLengthSeconds * 1000);
+};
+
+firebaseBuyerSeller.setSentimentStockScoreDefaults(function() {
+    start();
+});

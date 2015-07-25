@@ -1,21 +1,28 @@
 var stockBroker = module.exports = {};
 
-stockBroker.buyStocks = function(quotes, cb) {
+stockBroker.buyStocks = function(companyData, metadata) {
+	var stockCost = companyData.quote.price;
+	if (!stockCost) {
+		return;
+	}
+	var maxMoneyToSpend = Math.min(metadata.money, 200.00);
 	var cost = 0;
-	var stocksPurchased = 0;
-	quotes.forEach(function(quote) {
-		cost += quote.price;
-		stocksPurchased++;
-	});
-	return cb(cost, stocksPurchased);
+	var stocksToPurchase = 0;
+	while (cost < maxMoneyToSpend) {
+		cost += stockCost
+		stocksToPurchase++;
+	}
+	metadata.stocksOwned[companyData.ticker] += stocksToPurchase;
+	metadata.money -= cost;
 };
 
-stockBroker.sellStocks = function(quotes, cb) {
-	var cost = 0;
-	var stocksSold = 0;
-	quotes.forEach(function(quote) {
-		cost += quote.price;
-		stocksSold++;
-	});
-	return cb(cost, stocksSold);
+stockBroker.sellStocks = function(companyData, metadata) {
+	var stockCost = companyData.quote.price;
+	if (!stockCost) {
+		return;
+	}
+	var stocksOwned = metadata.stocksOwned[companyData.ticker];
+	var moneyEarned = stockCost * stocksOwned;
+	metadata.money += cost;
+	metadata.stocksOwned[companyData.ticker] = 0;
 };

@@ -1,0 +1,12 @@
+[
+	{
+		"name": "Google",
+		"ticker": "GOOG",
+		"keywords": ["google", "goog", "search", "larry page", "gmail"]
+	},
+	{
+		"name": "Microsoft",
+		"ticker": "MSFT",
+		"keywords": ["microsoft", "msft", "bing", "excel", "bill gates"]
+	}
+]
